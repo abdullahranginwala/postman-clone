@@ -5,20 +5,6 @@ import axios from "axios";
 
 const form = document.querySelector('[data-form]');
 
-form.addEventListener('submit', (e)=> {
-    e.preventDefault();
-
-    axios({
-        url: document.querySelector('[data-url]').value,
-        method: document.querySelector('[data-method]').value,
-        params: keyValuePairsToObject(queryParamsContianer),
-        headers: keyValuePairsToObject(headersContainer),
-        
-    }).then(response => {
-        console.log(response);
-    });
-});
-
 function keyValuePairsToObject(container) {
     const pairs = container.querySelectorAll('[data-key-value-pair]')
     return [...pairs].reduce((data, pair) => {
@@ -36,6 +22,7 @@ function keyValuePairsToObject(container) {
 const queryParamsContianer = document.querySelector('[data-query-params]')
 const headersContainer = document.querySelector('[data-headers')
 const keyValueTemplate = document.querySelector('[data-key-value-template]');
+const responseHeadersContainer = document.querySelector('[response-headers]');
 
 
 document.querySelector('[data-add-query-params-btn]').addEventListener('click', (e) => {
@@ -52,4 +39,44 @@ function createKeyValuePair() {
         e.target.closest('[data-key-value-pair]').remove();
     });
     return element;
+}
+
+
+//Handling API Request
+form.addEventListener('submit', (e)=> {
+    e.preventDefault();
+
+    axios({
+        url: document.querySelector('[data-url]').value,
+        method: document.querySelector('[data-method]').value,
+        params: keyValuePairsToObject(queryParamsContianer),
+        headers: keyValuePairsToObject(headersContainer),
+        
+    }).then(response => {
+        updateResponseDetails(response)
+        //updateResponseEditor(response.data)
+        updateResponseHeaders(response.headers)
+        console.log(response);
+    });
+});
+
+function updateResponseHeaders(headers) {
+    responseHeadersContainer.innerHTML = ""
+    Object.entries(headers).forEach(([key, value]) => {
+        const keyElement = document.createElement('div')
+        keyElement.textContent = key
+        responseHeadersContainer.append(keyElement)
+
+        const valueElement = document.createElement('div')
+        valueElement.textContent = value
+        responseHeadersContainer.append(valueElement)
+    })
+}
+
+function updateResponseDetails(response) {
+    document.querySelector('[data-status]').textContent = response.status
+}
+
+function updateResponseEditor(data) {
+    
 }
