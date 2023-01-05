@@ -1,7 +1,7 @@
 import "bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
-
+import prettyBytes from "pretty-bytes";
 
 const form = document.querySelector('[data-form]');
 
@@ -24,6 +24,24 @@ const headersContainer = document.querySelector('[data-headers')
 const keyValueTemplate = document.querySelector('[data-key-value-template]');
 const responseHeadersContainer = document.querySelector('[response-headers]');
 
+queryParamsContianer.append(createKeyValuePair())
+headersContainer.append(createKeyValuePair())
+
+axios.interceptors.request.use(request => {
+    request.customData = request.customData || {}
+    request.customData.startTime = new Date().getTime()
+    return request
+})
+
+axios.interceptors.response.use(updateEndTime, e => {
+    return Promise.reject(updateEndTime(e.response))
+})
+
+function updateEndTime(response) {
+    response.customData = response.customData || {}
+    response.customData.time = new Date().getTime() - response.config.customData.startTime
+    return response
+}
 
 document.querySelector('[data-add-query-params-btn]').addEventListener('click', (e) => {
     queryParamsContianer.append(createKeyValuePair())
@@ -52,7 +70,7 @@ form.addEventListener('submit', (e)=> {
         params: keyValuePairsToObject(queryParamsContianer),
         headers: keyValuePairsToObject(headersContainer),
         
-    }).then(response => {
+    }).catch(e => e).then(response => {
         updateResponseDetails(response)
         //updateResponseEditor(response.data)
         updateResponseHeaders(response.headers)
@@ -75,8 +93,11 @@ function updateResponseHeaders(headers) {
 
 function updateResponseDetails(response) {
     document.querySelector('[data-status]').textContent = response.status
+    document.querySelector('[data-time]').textContent = response.customData.time
+    document.querySelector('[data-size]').textContent = prettyBytes(
+        JSON.stringify(response.data).length + JSON.stringify(response.headers).length
+    )
 }
 
-function updateResponseEditor(data) {
-    
-}
+//function updateResponseEditor(data) {  
+//}
