@@ -2,6 +2,7 @@ import "bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 import prettyBytes from "pretty-bytes";
+import setupEditors from "./setupEditor";
 
 const form = document.querySelector('[data-form]');
 
@@ -37,6 +38,8 @@ axios.interceptors.response.use(updateEndTime, e => {
     return Promise.reject(updateEndTime(e.response))
 })
 
+const {requestEditor, updateResponseEditor} = setupEditors()
+
 function updateEndTime(response) {
     response.customData = response.customData || {}
     response.customData.time = new Date().getTime() - response.config.customData.startTime
@@ -64,6 +67,15 @@ function createKeyValuePair() {
 form.addEventListener('submit', (e)=> {
     e.preventDefault();
 
+    let data
+
+    try {
+        data = JSON.parse(requestEditor.state.doc.toString() || null)
+    } catch(e) {
+        alert(e)
+        return
+    }
+
     axios({
         url: document.querySelector('[data-url]').value,
         method: document.querySelector('[data-method]').value,
@@ -72,7 +84,7 @@ form.addEventListener('submit', (e)=> {
         
     }).catch(e => e).then(response => {
         updateResponseDetails(response)
-        //updateResponseEditor(response.data)
+        updateResponseEditor(response.data)
         updateResponseHeaders(response.headers)
         console.log(response);
     });
@@ -98,6 +110,3 @@ function updateResponseDetails(response) {
         JSON.stringify(response.data).length + JSON.stringify(response.headers).length
     )
 }
-
-//function updateResponseEditor(data) {  
-//}
